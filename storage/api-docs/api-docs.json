@@ -1,0 +1,1711 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API de gestion des catégories",
+        "description": "Documentation pour l'API de gestion des catégories de votre application.",
+        "contact": {
+            "email": "votre_email@example.com"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/login": {
+            "post": {
+                "summary": "Connecte un utilisateur",
+                "description": "Authentifie un utilisateur avec son email et son mot de passe et retourne un jeton d'accès et l'objet utilisateur avec ses rôles.",
+                "operationId": "3673edffcdc18c06ac5aef5e2219d774",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "utilisateur@exemple.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "motdepasse123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Connexion réussie",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "description": "Jeton d'authentification pour les requêtes API.",
+                                            "type": "string"
+                                        },
+                                        "user": {
+                                            "description": "Les informations de l'utilisateur.",
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "name": {
+                                                    "type": "string",
+                                                    "example": "Nom de l'utilisateur"
+                                                },
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "utilisateur@exemple.com"
+                                                },
+                                                "roles": {
+                                                    "description": "Les rôles assignés à l'utilisateur.",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "admin"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Identifiants invalides",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Les identifiants fournis sont incorrects."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur. Impossible de créer le jeton."
+                    }
+                }
+            }
+        },
+        "/api/register": {
+            "post": {
+                "summary": "Register a new user",
+                "operationId": "967d81e2717a9147b045255a4a2d1dd4",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "phone",
+                                    "adresse",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "adresse": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully"
+                    },
+                    "400": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/register-manager": {
+            "post": {
+                "summary": "Register a new manager",
+                "operationId": "571576b79a374632c087b63a44fab867",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "phone",
+                                    "adresse",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string"
+                                    },
+                                    "adresse": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Manager registered successfully"
+                    },
+                    "400": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/categories": {
+            "get": {
+                "summary": "Récupérer toutes les catégories",
+                "operationId": "3f5817a34833d0a1f4af4548dd3aeaba",
+                "responses": {
+                    "200": {
+                        "description": "Liste des catégories"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Ajouter nouvelle categorie",
+                "operationId": "71fcad552bb0eaba9fb191fd8d8dcab0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nom"
+                                ],
+                                "properties": {
+                                    "nom": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Categorie est crée"
+                    }
+                }
+            }
+        },
+        "/api/categories/{id}": {
+            "put": {
+                "summary": "Mettre à jour la categorie",
+                "operationId": "0e686b2748211cc688333ed705dc111f",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nom"
+                                ],
+                                "properties": {
+                                    "nom": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Categorie est mise à jour"
+                    },
+                    "404": {
+                        "description": "Category not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Supprimer la categorie",
+                "operationId": "4c12e22a7f8c617bd83bfa1fdc05428d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Categorie est supprimé"
+                    }
+                }
+            }
+        },
+        "/api/evenements": {
+            "get": {
+                "summary": "Récupérer toutes les evenements",
+                "operationId": "cf17114513864def8e795303a48f7205",
+                "responses": {
+                    "200": {
+                        "description": "Liste des evenements",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Ajouter un evenement et ses types de tickets",
+                "operationId": "6cc07eed54d06683e60f49ae4d921be1",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "titre",
+                                    "description",
+                                    "place",
+                                    "date_event",
+                                    "heure",
+                                    "image",
+                                    "user_id",
+                                    "categorie_id",
+                                    "typetickets"
+                                ],
+                                "properties": {
+                                    "titre": {
+                                        "description": "Titre de l'événement",
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "description": "Description de l'événement",
+                                        "type": "string"
+                                    },
+                                    "place": {
+                                        "description": "Lieu de l'événement",
+                                        "type": "string"
+                                    },
+                                    "date_event": {
+                                        "description": "Date de l'événement (YYYY-MM-DD)",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "heure": {
+                                        "description": "Heure de l'événement",
+                                        "type": "string"
+                                    },
+                                    "image": {
+                                        "description": "Fichier image",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "user_id": {
+                                        "description": "ID de l'utilisateur",
+                                        "type": "integer"
+                                    },
+                                    "categorie_id": {
+                                        "description": "ID de la catégorie",
+                                        "type": "integer"
+                                    },
+                                    "typetickets": {
+                                        "description": "JSON stringified array of ticket types.",
+                                        "type": "string",
+                                        "example": "[{\"nom\":\"VIP\",\"prix\":150.0,\"quantite\":10},{\"nom\":\"Standard\",\"prix\":50.0,\"quantite\":100}]"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Événement et tickets créés avec succès."
+                    },
+                    "422": {
+                        "description": "Données de validation manquantes ou invalides."
+                    },
+                    "500": {
+                        "description": "Erreur serveur lors de la création."
+                    }
+                }
+            }
+        },
+        "/api/evenement-manager": {
+            "get": {
+                "summary": "Toutes les evenements validés du manager",
+                "operationId": "b8f13748f73a817583e35111fd57e644",
+                "responses": {
+                    "200": {
+                        "description": "Liste des evenements",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/evenements/{id}/validate": {
+            "patch": {
+                "summary": "Valider un événement (changer son statut à 1)",
+                "operationId": "dc6372a069c87467ceef7964f6a550d4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'événement à valider.",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Événement validé avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Evenement est validé."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Événement non trouvé."
+                    },
+                    "500": {
+                        "description": "Erreur serveur lors de la validation."
+                    }
+                }
+            }
+        },
+        "/api/evenements/{id}": {
+            "get": {
+                "summary": "Détailles de l'evenement",
+                "operationId": "8a580ac0db622f34e0deb0f5fb79364b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Détailles de l'evenement"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Mettre à jour un événement existant, son image et ses types de tickets",
+                "operationId": "e17386b5fae730780ebcb02fa1055f4e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID de l'événement à mettre à jour",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "properties": {
+                                    "_method": {
+                                        "description": "Champ requis pour simuler la méthode PUT en 'multipart/form-data'",
+                                        "type": "string",
+                                        "default": "PUT"
+                                    },
+                                    "titre": {
+                                        "description": "Titre de l'événement (Optionnel)",
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "description": "Description de l'événement (Optionnel)",
+                                        "type": "string"
+                                    },
+                                    "place": {
+                                        "description": "Lieu de l'événement (Optionnel)",
+                                        "type": "string"
+                                    },
+                                    "date_event": {
+                                        "description": "Date de l'événement (YYYY-MM-DD) (Optionnel)",
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "heure": {
+                                        "description": "Heure de l'événement (Optionnel)",
+                                        "type": "string"
+                                    },
+                                    "image": {
+                                        "description": "Nouveau Fichier image (Optionnel, remplace l'ancien)",
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "user_id": {
+                                        "description": "ID de l'utilisateur (Optionnel)",
+                                        "type": "integer"
+                                    },
+                                    "categorie_id": {
+                                        "description": "ID de la catégorie (Optionnel)",
+                                        "type": "integer"
+                                    },
+                                    "typetickets": {
+                                        "description": "JSON stringifié (obligatoire pour la mise à jour des tickets). **Tous les anciens tickets seront supprimés et remplacés par cette liste**.",
+                                        "type": "string",
+                                        "example": "[{\"nom\":\"VIP M.A.J.\",\"prix\":180.0,\"quantite\":5},{\"nom\":\"Standard M.A.J.\",\"prix\":60.0,\"quantite\":150}]"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Événement et tickets mis à jour avec succès."
+                    },
+                    "404": {
+                        "description": "Événement non trouvé."
+                    },
+                    "422": {
+                        "description": "Données de validation manquantes ou invalides."
+                    },
+                    "500": {
+                        "description": "Erreur serveur lors de la mise à jour."
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Supprimer un evenement",
+                "operationId": "86e6f8fa5098872c9168eef893ab3876",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Evenement est supprimé"
+                    }
+                }
+            }
+        },
+        "/api/games": {
+            "get": {
+                "summary": "Récupérer toutes les games",
+                "operationId": "93736f40a135111a310e4b25ad61f30b",
+                "responses": {
+                    "200": {
+                        "description": "Liste des games"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Crée nouveau jeu",
+                "operationId": "b8b9557618eb0f7b3650bdd4ab3a6487",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "groupe_id",
+                                    "candidat",
+                                    "phone",
+                                    "gift_id"
+                                ],
+                                "properties": {
+                                    "groupe_id": {
+                                        "type": "text"
+                                    },
+                                    "candidat": {
+                                        "type": "text"
+                                    },
+                                    "phone": {
+                                        "type": "text"
+                                    },
+                                    "gift_id": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Jeu est crée"
+                    }
+                }
+            }
+        },
+        "/api/games/{id}": {
+            "put": {
+                "summary": "Modifier Jeu",
+                "operationId": "7a7a51e92437ab9405a4bd9153eacec7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "groupe_id",
+                                    "candidat",
+                                    "phone",
+                                    "gift_id"
+                                ],
+                                "properties": {
+                                    "groupe_id": {
+                                        "type": "text"
+                                    },
+                                    "candidat": {
+                                        "type": "text"
+                                    },
+                                    "phone": {
+                                        "type": "text"
+                                    },
+                                    "gift_id": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Jeu est mise à jour"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Supprimer le Jeu",
+                "operationId": "1b52414d7af18b35901add3451cba91c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Jeu est supprimé"
+                    }
+                }
+            }
+        },
+        "/api/groupes/{groupe}/games": {
+            "get": {
+                "summary": "Récupérer tous les joueurs d'un groupe",
+                "description": "Récupère la liste de tous les joueurs associés à un groupe spécifique.",
+                "operationId": "4d7ebdc9f0b83e66aa9aed8598360de9",
+                "parameters": [
+                    {
+                        "name": "groupe",
+                        "in": "path",
+                        "description": "ID du groupe",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des joueurs du groupe",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "integer",
+                                                "example": 101
+                                            },
+                                            "nom": {
+                                                "type": "string",
+                                                "example": "Nom du joueur"
+                                            },
+                                            "groupe_id": {
+                                                "type": "integer",
+                                                "example": 1
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Groupe non trouvé"
+                    }
+                }
+            }
+        },
+        "/api/gifts": {
+            "get": {
+                "summary": "Récupérer toutes les cadeaux",
+                "operationId": "4befadf53537a7ab77d7b731ecafcfee",
+                "responses": {
+                    "200": {
+                        "description": "Liste des cadeaux"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Ajouter un cadeau",
+                "operationId": "84cc149646671c5808f7cecd619bbd0d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nom"
+                                ],
+                                "properties": {
+                                    "nom": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Cadeau est crée"
+                    }
+                }
+            }
+        },
+        "/api/gifts/{id}": {
+            "put": {
+                "summary": "Mettre à jour le cadeau",
+                "operationId": "3f9d080ff64fcd36e707fa4f8f675be8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "nom"
+                                ],
+                                "properties": {
+                                    "nom": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cadeau est mise à jour"
+                    },
+                    "404": {
+                        "description": "Gift not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Supprimer le cadeau",
+                "operationId": "d36bc890268318f32be19cc32e70cd46",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Cadeau est supprimé"
+                    }
+                }
+            }
+        },
+        "/api/groupes": {
+            "get": {
+                "summary": "Récupérer toutes les groupes",
+                "operationId": "26d7d88b4311ae1b78103608d47b81a0",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Terme de recherche pour filtrer les groupes par nom",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des groupes paginée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "nom": {
+                                                        "type": "string",
+                                                        "example": "Groupe A"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Crée nouveau groupe",
+                "operationId": "33946dfdde0bd3f489dddc4e178fb457",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Groupe est crée"
+                    }
+                }
+            }
+        },
+        "/api/groupe-agent": {
+            "get": {
+                "summary": "Récupérer toutes les groupes par jour",
+                "operationId": "6aed908c301a6a2ee3a9e36621e13aaa",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Terme de recherche pour filtrer les groupes par nom",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des groupes paginée",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "nom": {
+                                                        "type": "string",
+                                                        "example": "Groupe A"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object"
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/groupes/{groupe}": {
+            "get": {
+                "summary": "Récupérer un groupe et ses joueurs",
+                "description": "Récupère les détails d'un groupe spécifique avec tous les joueurs qui lui sont associés.",
+                "operationId": "20ee486cd52ade01539f8bd46ef6c98a",
+                "parameters": [
+                    {
+                        "name": "groupe",
+                        "in": "path",
+                        "description": "ID du groupe",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Détails du groupe et de ses joueurs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "nom": {
+                                            "type": "string",
+                                            "example": "Nom du groupe"
+                                        },
+                                        "games": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "titre": {
+                                                        "type": "string",
+                                                        "example": "Nom du joueur"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Groupe non trouvé"
+                    }
+                }
+            }
+        },
+        "/api/groupes/{id}": {
+            "put": {
+                "summary": "Modifier groupe",
+                "operationId": "91fa79eb5b9600ea3c3cc9343cf76529",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "user_id"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "text"
+                                    },
+                                    "user_id": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Groupe est mise à jour"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Supprimer le groupe",
+                "operationId": "06878a9780474377f9383bc62a498772",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Groupe est supprimé"
+                    }
+                }
+            }
+        },
+        "/api/groupe/{id}/tirage": {
+            "get": {
+                "summary": "Résultats de tirage au sort",
+                "operationId": "825b33b5299ac6c434c6c82d9802169b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Voici le résultat"
+                    }
+                }
+            }
+        },
+        "/api/historiques": {
+            "get": {
+                "summary": "Historiques des événements",
+                "operationId": "412bc3ba1a3ba5626c4e0d98c7783972",
+                "responses": {
+                    "200": {
+                        "description": "Liste des historiques"
+                    }
+                }
+            }
+        },
+        "/api/historiques/valider/{evenement}": {
+            "post": {
+                "summary": "Valider la participation de l'utilisateur actuel à un événement",
+                "operationId": "3cf72fe796a3da1be29802d24022c032",
+                "parameters": [
+                    {
+                        "name": "Evenement à valide",
+                        "in": "path",
+                        "description": "ID de l'événement à valide",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Succès de la validation de l'événement"
+                    }
+                }
+            }
+        },
+        "/api/permissions": {
+            "get": {
+                "summary": "Récupérer toutes les permissions",
+                "operationId": "27bb1606a7b293d1d49f57bb94ae71f7",
+                "responses": {
+                    "200": {
+                        "description": "Liste des permissions"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Crée nouvelle permission",
+                "operationId": "37c918c86b5085b0eb088fa760c7175d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Permission est crée"
+                    }
+                }
+            }
+        },
+        "/api/permissions/{id}": {
+            "put": {
+                "summary": "Modifier permission",
+                "operationId": "db11d4d00da3ece5b99187df6f1e86e7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Permission est mise à jour"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Supprimer la permission",
+                "operationId": "f0afbd22579524a5bb83b653f7dd18dc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Permission est supprimé"
+                    }
+                }
+            }
+        },
+        "/api/roles": {
+            "get": {
+                "summary": "Récupérer toutes les rôles",
+                "operationId": "77e3636d8592997ce9d6d27b50857a69",
+                "responses": {
+                    "200": {
+                        "description": "Liste des rôles"
+                    }
+                }
+            },
+            "post": {
+                "summary": "Crée un nouveau rôle",
+                "description": "Crée un nouveau rôle avec la possibilité de lui attribuer immédiatement des permissions.",
+                "operationId": "4a563842fbfcad237f63da43065fca3d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "description": "Le nom du rôle.",
+                                        "type": "string",
+                                        "example": "rédacteur"
+                                    },
+                                    "permissions": {
+                                        "description": "Un tableau de noms de permissions à attribuer au rôle.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "voir article"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Rôle créé avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer",
+                                            "example": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "example": "rédacteur"
+                                        },
+                                        "guard_name": {
+                                            "type": "string",
+                                            "example": "web"
+                                        },
+                                        "permissions": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer",
+                                                        "example": 101
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "voir article"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation. Le nom du rôle peut déjà exister ou les permissions ne sont pas valides."
+                    }
+                }
+            }
+        },
+        "/api/roles/{id}": {
+            "put": {
+                "summary": "Modifier rôle",
+                "operationId": "786d6990093a8eb3a56931f19a827e43",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Rôle est mise à jour"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Supprimer le rôle",
+                "operationId": "8285c46981c60ad600aa4077307aec04",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Rôle est supprimé"
+                    }
+                }
+            }
+        },
+        "/api/users/assign-role": {
+            "post": {
+                "summary": "Assigne un rôle à un utilisateur",
+                "description": "Cette fonction assigne un rôle existant à un utilisateur spécifié par son ID.",
+                "operationId": "5e822bff2cf3178af12a956baf806687",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "role_name"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "role_name": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rôle assigné avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rôle assigné avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Utilisateur ou Rôle non trouvé"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                }
+            }
+        },
+        "/api/users/revoke-role": {
+            "post": {
+                "summary": "Révoque un rôle d'un utilisateur",
+                "description": "Cette fonction retire un rôle existant d'un utilisateur spécifié par son ID.",
+                "operationId": "91fde2a579f4a5f750c8c7f090b98af6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "role_name"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "integer",
+                                        "example": 1
+                                    },
+                                    "role_name": {
+                                        "type": "string",
+                                        "example": "admin"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Rôle révoqué avec succès",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Rôle révoqué avec succès"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Utilisateur ou Rôle non trouvé"
+                    },
+                    "422": {
+                        "description": "Erreur de validation"
+                    }
+                }
+            }
+        },
+        "/api/users": {
+            "get": {
+                "summary": "Récupérer toutes les utilisateurs",
+                "operationId": "c457726701591d1183b53aa71fc13441",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "Ajouter un utilisateur",
+                "operationId": "592819a0265360b2014512d6dbfaf0e7",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "phone",
+                                    "adresse"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "text"
+                                    },
+                                    "email": {
+                                        "type": "text"
+                                    },
+                                    "phone": {
+                                        "type": "text"
+                                    },
+                                    "adresse": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User est crée"
+                    }
+                }
+            }
+        },
+        "/api/users/{id}": {
+            "put": {
+                "summary": "Mise à jour de l'utilisateur",
+                "operationId": "b9091397c8b25f12c6adb74be6ce3a5a",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "phone",
+                                    "adresse"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "text"
+                                    },
+                                    "email": {
+                                        "type": "text"
+                                    },
+                                    "phone": {
+                                        "type": "text"
+                                    },
+                                    "adresse": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User est mise à jour"
+                    },
+                    "404": {
+                        "description": "User not found"
+                    }
+                }
+            },
+            "delete": {
+                "summary": "Supprimer un utilisateur",
+                "operationId": "fa56cffde745d3f152f95cbacd936c0b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "User est supprimé"
+                    }
+                }
+            }
+        },
+        "/api/storeAdmin": {
+            "post": {
+                "summary": "Ajouter un admin",
+                "operationId": "068371b5578865e551ad3054e4fb47aa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "phone",
+                                    "adresse"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "text"
+                                    },
+                                    "email": {
+                                        "type": "text"
+                                    },
+                                    "phone": {
+                                        "type": "text"
+                                    },
+                                    "adresse": {
+                                        "type": "text"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "User est crée"
+                    }
+                }
+            }
+        }
+    },
+    "tags": []
+}
