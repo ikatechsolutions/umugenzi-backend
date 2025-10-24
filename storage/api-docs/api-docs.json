@@ -1275,6 +1275,120 @@
                 }
             }
         },
+        "/api/reservations": {
+            "post": {
+                "summary": "Crée une nouvelle réservation de ticket et gère le stock.",
+                "description": "Valide les données, verrouille le stock pour éviter les problèmes de concurrence, vérifie la disponibilité, crée la réservation, met à jour le stock et génère les instances de tickets. Utilise une transaction de base de données.",
+                "operationId": "01e3d21dc330a31de025203bc142ffa3",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ticket_id",
+                                    "quantite"
+                                ],
+                                "properties": {
+                                    "ticket_id": {
+                                        "description": "ID du ticket à réserver (doit exister dans la table 'tickets').",
+                                        "type": "integer"
+                                    },
+                                    "quantite": {
+                                        "description": "Quantité de tickets à réserver.",
+                                        "type": "integer",
+                                        "format": "int32",
+                                        "minimum": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Réservation créée avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Réservation créée avec succès. 5 tickets générés."
+                                        },
+                                        "reservation_id": {
+                                            "description": "ID de la nouvelle réservation.",
+                                            "type": "integer"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Quantité de tickets non disponible (stock insuffisant).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Quantité de tickets non disponible (stock restant: 2)."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation des données fournies.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur lors du traitement de la transaction.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors du traitement de la réservation."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/roles": {
             "get": {
                 "summary": "Récupérer toutes les rôles",

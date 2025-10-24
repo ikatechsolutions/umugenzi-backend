@@ -31,7 +31,53 @@ class ReservationController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * @OA\Post(
+     * path="/api/reservations",
+     * summary="Crée une nouvelle réservation de ticket et gère le stock.",
+     * description="Valide les données, verrouille le stock pour éviter les problèmes de concurrence, vérifie la disponibilité, crée la réservation, met à jour le stock et génère les instances de tickets. Utilise une transaction de base de données.",
+     *
+     * @OA\RequestBody(
+     * required=true,
+     * @OA\JsonContent(
+     * required={"ticket_id", "quantite"},
+     * @OA\Property(property="ticket_id", type="integer", description="ID du ticket à réserver (doit exister dans la table 'tickets')."),
+     * @OA\Property(property="quantite", type="integer", format="int32", minimum=1, description="Quantité de tickets à réserver."),
+     * )
+     * ),
+     *
+     * @OA\Response(
+     * response=201,
+     * description="Réservation créée avec succès.",
+     * @OA\JsonContent(
+     * @OA\Property(property="status", type="string", example="success"),
+     * @OA\Property(property="message", type="string", example="Réservation créée avec succès. 5 tickets générés."),
+     * @OA\Property(property="reservation_id", type="integer", description="ID de la nouvelle réservation.")
+     * )
+     * ),
+     * @OA\Response(
+     * response=400,
+     * description="Quantité de tickets non disponible (stock insuffisant).",
+     * @OA\JsonContent(
+     * @OA\Property(property="error", type="string", example="Quantité de tickets non disponible (stock restant: 2).")
+     * )
+     * ),
+     * @OA\Response(
+     * response=422,
+     * description="Erreur de validation des données fournies.",
+     * @OA\JsonContent(
+     * @OA\Property(property="message", type="string", example="The given data was invalid."),
+     * @OA\Property(property="errors", type="object")
+     * )
+     * ),
+     * @OA\Response(
+     * response=500,
+     * description="Erreur interne du serveur lors du traitement de la transaction.",
+     * @OA\JsonContent(
+     * @OA\Property(property="status", type="string", example="error"),
+     * @OA\Property(property="message", type="string", example="Erreur lors du traitement de la réservation.")
+     * )
+     * )
+     * )
      */
     public function store(Request $request)
     {
