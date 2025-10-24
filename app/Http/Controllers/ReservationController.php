@@ -127,8 +127,9 @@ class ReservationController extends Controller
         return $pdf->download($filename);
     }
 
-    public function validateTicket(Request $request)
+    public function validateTicket(Request $request, int $evenementId)
     {
+        // Validation des données : le code unique est requis
         $request->validate(['code' => 'required|string']);
 
         $codeUnique = $request->input('code');
@@ -136,8 +137,9 @@ class ReservationController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Verrouiller la ligne et la trouver
+            // 1. Verrouiller la ligne et la trouver (avec les relations nécessaires)
             $ticket = Ticketinstance::where('code_unique', $codeUnique)
+                ->with('reservation.ticket.typeticket')
                 ->lockForUpdate()
                 ->first();
 
@@ -145,30 +147,69 @@ class ReservationController extends Controller
                 DB::rollBack();
                 return response()->json(['message' => 'Ticket non trouvé.'], 404);
             }
-
-            // 2. Vérification du statut actuel
-            if ($ticket->statut_validation == 1) {
+            
+            // 2. VERIFICATION CRITIQUE : Le ticket appartient-il à cet événement ?
+            $ticketEvenementId = optional($ticket->reservation->ticket->typeticket)->evenement_id;
+            
+            if ($ticketEvenementId !== $evenementId) {
                 DB::rollBack();
-                // Si vous voulez enregistrer qui a validé et quand, ajoutez ces colonnes
                 return response()->json([
-                    'message' => 'Ticket déjà validé.', 
-                    'validated_at' => $ticket->updated_at
-                ], 409); // 409 Conflict
+                    'message' => 'Ticket invalide pour cet événement.',
+                    'detail' => 'Événement attendu: ' . $evenementId . ', Trouvé: ' . $ticketEvenementId
+                ], 403); 
             }
 
-            // 3. Validation (Mise à jour à 1)
-            $ticket->statut_validation = 1;
-            $ticket->save();
-            
-            DB::commit();
+            // --- LOGIQUE DE DOUBLE SCAN ---
 
-            return response()->json([
-                'message' => 'Validation réussie.',
-                'ticket_info' => $ticket->only('code_unique', 'statut_validation')
-            ], 200);
+            // A. Cas : Le ticket est DÉJÀ validé (Scan n°3 ou plus)
+            if ($ticket->statut_validation == 1) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Ticket déjà validé et utilisé.', 
+                    'statut' => 'USED',
+                    'validated_at' => $ticket->updated_at
+                ], 409); 
+            }
+            
+            // B. Cas : Le ticket est PRÊT pour la validation (Scan n°2)
+            if ($ticket->statut_payment == 1) {
+                // Le paiement est déjà vérifié, procéder à la validation d'entrée
+                
+                $ticket->statut_validation = 1;
+                // Optionnel : enregistrer la date de validation
+                // $ticket->validated_at = Carbon::now(); 
+                $ticket->save();
+                
+                DB::commit();
+
+                return response()->json([
+                    'message' => '✅ VALIDATION D\'ENTRÉE RÉUSSIE.',
+                    'statut' => 'VALIDATED', // Indique la validation finale
+                    'type' => $ticket->reservation->ticket->typeticket->nom
+                ], 200);
+
+            } 
+            
+            // C. Cas : Le ticket n'est PAS payé (Scan n°1)
+            else { 
+                // Le statut_payment est à 0, on le met à 1 (Vérification du paiement)
+                
+                $ticket->statut_payment = 1;
+                $ticket->save();
+
+                DB::commit();
+
+                return response()->json([
+                    'message' => '✅ PAIEMENT VÉRIFIÉ. Scanner une deuxième fois pour l\'entrée.',
+                    'statut' => 'PAYMENT_VERIFIED', // Indique que le paiement est OK, mais pas encore entré
+                    'code_unique' => $ticket->code_unique,
+                ], 202); // 202 Accepted (Accepté, mais traitement incomplet)
+            }
 
         } catch (\Exception $e) {
             DB::rollBack();
+            // Loggez l'erreur pour le débogage en production
+            // \Log::error("Erreur de validation: " . $e->getMessage()); 
             return response()->json(['message' => 'Erreur critique lors de la validation.'], 500);
         }
     }

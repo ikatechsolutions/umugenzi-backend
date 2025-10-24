@@ -3,10 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use BaconQrCode\Writer;
-use BaconQrCode\Renderer\Image\SvgImageBackEnd;
-use BaconQrCode\Renderer\ImageRenderer;
-use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use Endroid\QrCode\QrCode;
+use Endroid\QrCode\Writer\PngWriter;
 
 class Ticketinstance extends Model
 {
@@ -35,11 +33,7 @@ class Ticketinstance extends Model
         $dateStr = now()->format('Ymd');
         $evenementTitrePrefix = strtoupper(substr($evenement->titre, 0, 3)); // 3 premières lettres du titre de l'événement
 
-        $renderer = new ImageRenderer(
-            new RendererStyle(300), // Taille de 300px
-            new SvgImageBackEnd()
-        );
-        $writer = new Writer($renderer);
+        $writer = new PngWriter();
 
         for ($i = 0; $i < $quantity; $i++) {
             // Logique de génération du code_unique
@@ -47,14 +41,17 @@ class Ticketinstance extends Model
             $uniqueId = \Illuminate\Support\Str::uuid();
             $codeUnique = "{$evenementTitrePrefix}_{$typeticket->nom}_{$dateStr}_{$uniqueId}";
 
-            // Génération du QR code (exemple: stockage de la chaîne du QR code, pas de l'image)
-            // Si vous stockez l'image, vous devrez utiliser un stockage de fichiers (S3/local)
-            $qrCodeData = $writer->writeString($codeUnique);
+            $qrCode = new QrCode($codeUnique); 
+
+            $result = $writer->write($qrCode);
+            $pngData = $result->getString();
+
+            $base64Image = 'data:image/png;base64,' . base64_encode($pngData);
 
             $tickets[] = [
                 'reservation_id' => $reservation->id,
                 'code_unique' => $codeUnique,
-                'qr_code' => $qrCodeData,
+                'qr_code' => $base64Image,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

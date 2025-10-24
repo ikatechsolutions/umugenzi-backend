@@ -49,13 +49,13 @@ Route::post('historiques/valider/{evenement}', [HistoriqueeventController::class
 
 Route::apiResource('categories',CategoryController::class);
 Route::apiResource('evenements',EvenementController::class);
+Route::get('/events/today', [EvenementController::class, 'eventsToday']);
 Route::patch('/evenements/{id}/validate', [EvenementController::class, 'EventValidation']);
 Route::apiResource('typetickets',TypeticketController::class);
 Route::apiResource('tickets',TicketController::class);
 Route::apiResource('reservations',ReservationController::class);
 
-Route::post('/api/validate-ticket', [ReservationController::class, 'validateTicket'])
-    ->name('api.ticket.validate');
+Route::post('/validate-ticket/{evenementId}', [ReservationController::class, 'validateTicket']);
 
 Route::apiResource('groupes',GroupeController::class);
 Route::get('/groupe/{groupeId}/tirage', [GroupeController::class, 'effectuerTirageAuSort']);
