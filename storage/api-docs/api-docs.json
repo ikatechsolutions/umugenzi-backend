@@ -1389,6 +1389,27 @@
                 }
             }
         },
+        "/api/ticket-all": {
+            "get": {
+                "summary": "Récupérer toutes les ticket instances",
+                "operationId": "4b29e65a4903c0cc19df2a85207b62cc",
+                "responses": {
+                    "200": {
+                        "description": "Liste des ticket instances",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/roles": {
             "get": {
                 "summary": "Récupérer toutes les rôles",

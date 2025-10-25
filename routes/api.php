@@ -56,6 +56,7 @@ Route::apiResource('tickets',TicketController::class);
 Route::apiResource('reservations',ReservationController::class);
 
 Route::post('/validate-ticket/{evenementId}', [ReservationController::class, 'validateTicket']);
+Route::get('/ticket-all', [ReservationController::class, 'allTicket']);
 
 Route::apiResource('groupes',GroupeController::class);
 Route::get('/groupe/{groupeId}/tirage', [GroupeController::class, 'effectuerTirageAuSort']);

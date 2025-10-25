@@ -316,4 +316,23 @@ class ReservationController extends Controller
             'message' => 'Reservation deleted'
         ]);
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/ticket-all",
+     *     summary="Récupérer toutes les ticket instances",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Liste des ticket instances",
+     *         @OA\JsonContent(type="array", @OA\Items(type="string"))
+     *     )
+     * )
+     */
+    public function allTicket()
+    {
+        $ticketInstance = Ticketinstance::with('reservation.ticket.typeticket.evenement')->get();
+        
+
+        return response()->json($ticketInstance);
+    }       
 }
