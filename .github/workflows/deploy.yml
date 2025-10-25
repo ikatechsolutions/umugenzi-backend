@@ -1,4 +1,4 @@
-name: Deploy Laravel to VPS
+name: 🚀 Deploy Laravel to VPS
 
 on:
   push:
@@ -7,26 +7,45 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to Production
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # Étape 1 — Récupération du code du repo
+      - name: 🧩 Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up SSH
+      # Étape 2 — Configuration SSH pour se connecter au VPS
+      - name: 🔐 Set up SSH
         uses: webfactory/ssh-agent@v0.8.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Deploy to VPS
+      # Étape 3 — Déploiement sur le VPS
+      - name: 🚀 Deploy to VPS
         run: |
+          echo "===== 🚀 DÉBUT DU DÉPLOIEMENT SUR LE VPS ====="
+
           ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd /var/www/umugenzi-backend
-          git pull origin main
-          composer install --no-dev --optimize-autoloader
-          php artisan migrate --force
+          echo "📂 Accès au répertoire du projet..."
+          cd /var/www/umugenzi-backend || { echo "❌ Répertoire introuvable"; exit 1; }
+
+          echo "🧹 Nettoyage et récupération du code..."
+          git fetch origin main
+          git reset --hard origin/main || { echo "❌ Échec du reset"; exit 1; }
+
+          echo "📦 Installation des dépendances Composer..."
+          composer install --no-dev --optimize-autoloader || { echo "❌ Échec installation Composer"; exit 1; }
+
+          echo "⚙️  Exécution des migrations..."
+          php artisan migrate --force || { echo "❌ Échec des migrations"; exit 1; }
+
+          echo "🧠 Mise en cache des configurations..."
           php artisan config:cache
           php artisan route:cache
           php artisan view:cache
-          exit
+
+          echo "✅ Déploiement terminé avec succès sur $(hostname)"
           EOF
+
+          echo "===== ✅ DÉPLOIEMENT TERMINÉ AVEC SUCCÈS ====="
