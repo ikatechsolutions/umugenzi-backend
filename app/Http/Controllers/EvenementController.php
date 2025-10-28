@@ -140,11 +140,11 @@ class EvenementController extends Controller
             $evenement->date_event = $validatedData['date_event'];
             $evenement->heure = $validatedData['heure'];
 
-            $Photo = $request->image;
-            $filePhoto = time().'.'.$Photo->getClientOriginalExtension();
-            $request->image->move('image_events',$filePhoto);
+            // $Photo = $request->image;
+            // $filePhoto = time().'.'.$Photo->getClientOriginalExtension();
+            // $request->image->move(public_path('image_events'), $filePhoto);
 
-            // $filePhoto = $request->file('image')->store('image_events', 'public');
+            $filePhoto = $request->file('image')->store('image_events', 'public');
             $evenement->image = $filePhoto;
 
             $evenement->user_id = $validatedData['user_id'];
