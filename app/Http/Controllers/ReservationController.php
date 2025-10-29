@@ -334,5 +334,123 @@ class ReservationController extends Controller
         
 
         return response()->json($ticketInstance);
-    }       
+    }
+    
+    /**
+     * @OA\Get(
+     * path="/api/ticket-by-event/{evenementId}",
+     * summary="Récupérer toutes les instances de tickets pour un événement donné",
+     * @OA\Parameter(
+     * name="evenementId",
+     * in="path",
+     * description="ID de l'événement",
+     * required=true,
+     * @OA\Schema(
+     * type="integer",
+     * format="int64"
+     * )
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Liste des instances de tickets pour l'événement",
+     * @OA\JsonContent(type="array", @OA\Items(type="string")) 
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="Aucune instance de ticket trouvée pour cet événement"
+     * )
+     * )
+     */
+    public function getTicketsByEventId($evenementId)
+    {
+        // On utilise la relation 'with' pour charger les relations nécessaires
+        // (reservation, ticket, typeticket et evenement) pour éviter le problème de N+1 requêtes.
+        // On utilise 'whereHas' pour filtrer les Ticketinstance
+        // où la relation imbriquée 'reservation.ticket.typeticket.evenement' a l'ID correspondant.
+        $ticketInstances = Ticketinstance::with([
+            'reservation.ticket.typeticket.evenement'
+        ])
+        ->whereHas('reservation.ticket.typeticket.evenement', function ($query) use ($evenementId) {
+            $query->where('id', $evenementId);
+        })
+        ->get();
+
+        if ($ticketInstances->isEmpty()) {
+            return response()->json(['message' => 'Aucune instance de ticket trouvée pour cet événement.'], 404);
+        }
+
+        return response()->json($ticketInstances);
+    }
+
+    /**
+     * @OA\Get(
+     * path="/api/ticket-by-event-and-payment-status/{evenementId}/{isPaid}",
+     * summary="Récupérer les instances de tickets par événement et statut de paiement",
+     * description="Récupère les instances de tickets (Ticketinstance) pour un événement donné, filtrées par leur statut de paiement (1 pour Payé, 0 pour Non Payé).",
+     * @OA\Parameter(
+     * name="evenementId",
+     * in="path",
+     * description="ID de l'événement",
+     * required=true,
+     * @OA\Schema(
+     * type="integer",
+     * format="int64"
+     * )
+     * ),
+     * @OA\Parameter(
+     * name="isPaid",
+     * in="path",
+     * description="Statut de paiement : 1 pour Payé, 0 pour Non Payé",
+     * required=true,
+     * @OA\Schema(
+     * type="integer",
+     * enum={0, 1}
+     * )
+     * ),
+     * @OA\Response(
+     * response=200,
+     * description="Liste des instances de tickets correspondant aux critères",
+     * @OA\JsonContent(type="array", @OA\Items(type="string"))
+     * ),
+     * @OA\Response(
+     * response=400,
+     * description="Statut de paiement invalide (doit être 0 ou 1)"
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="Aucune instance de ticket trouvée pour cet événement et ce statut"
+     * )
+     * )
+     */
+    public function getTicketsByEventAndPaymentStatus(int $evenementId, int $isPaid)
+    {
+        // 1. Validation du paramètre de paiement
+        if (!in_array($isPaid, [0, 1])) {
+            return response()->json([
+                'message' => 'Le statut de paiement doit être 0 (Non Payé) ou 1 (Payé).'
+            ], 400); // 400 Bad Request
+        }
+
+        // 2. Requête combinée
+        $ticketInstances = Ticketinstance::with([
+            'reservation.ticket.typeticket.evenement'
+        ])
+        // Filtre 1: Par ID d'événement (utilise whereHas pour naviguer dans les relations)
+        ->whereHas('reservation.ticket.typeticket.evenement', function ($query) use ($evenementId) {
+            $query->where('id', $evenementId);
+        })
+        // Filtre 2: Par statut de paiement (filtre direct sur la colonne de la table ticketinstances)
+        ->where('statut_payment', $isPaid)
+        ->get();
+
+        // 3. Gestion des résultats
+        if ($ticketInstances->isEmpty()) {
+            $statusDescription = ($isPaid === 1) ? 'Payés' : 'Non Payés';
+            return response()->json([
+                'message' => "Aucune instance de ticket '{$statusDescription}' trouvée pour l'événement ID : {$evenementId}."
+            ], 404);
+        }
+
+        return response()->json($ticketInstances);
+    }
 }

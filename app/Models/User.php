@@ -50,4 +50,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function ticketinstances()
+    {
+        return $this->belongsToMany(Ticketinstance::class, 'ticketagents'); 
+    }
 }

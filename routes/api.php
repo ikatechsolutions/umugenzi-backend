@@ -16,6 +16,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GiftController;
 use App\Http\Controllers\HistoriqueeventController;
+use App\Http\Controllers\TicketagentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -44,8 +45,11 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::get('/evenement-manager', [EvenementController::class, 'eventManager']);
-Route::post('historiques/valider/{evenement}', [HistoriqueeventController::class, 'store']);
+    Route::post('historiques/valider/{evenement}', [HistoriqueeventController::class, 'store']);
+    Route::get('/me/assigned-tickets', [TicketagentController::class, 'getMyAssignedTickets']);
 });
+
+Route::get('/users/assigned-tickets', [TicketagentController::class, 'getAllUsersWithAssignedTickets']);
 
 Route::apiResource('categories',CategoryController::class);
 Route::apiResource('evenements',EvenementController::class);
@@ -57,6 +61,8 @@ Route::apiResource('reservations',ReservationController::class);
 
 Route::post('/validate-ticket/{evenementId}', [ReservationController::class, 'validateTicket']);
 Route::get('/ticket-all', [ReservationController::class, 'allTicket']);
+Route::get('/ticket-by-event/{evenementId}', [ReservationController::class, 'getTicketsByEventId']);
+Route::get('/ticket-by-event-and-payment-status/{evenementId}/{isPaid}', [ReservationController::class, 'getTicketsByEventAndPaymentStatus']);
 
 Route::apiResource('groupes',GroupeController::class);
 Route::get('/groupe/{groupeId}/tirage', [GroupeController::class, 'effectuerTirageAuSort']);

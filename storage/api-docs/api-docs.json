@@ -1410,6 +1410,95 @@
                 }
             }
         },
+        "/api/ticket-by-event/{evenementId}": {
+            "get": {
+                "summary": "Récupérer toutes les instances de tickets pour un événement donné",
+                "operationId": "272235fd8b00e07ea9a60dea253b4e69",
+                "parameters": [
+                    {
+                        "name": "evenementId",
+                        "in": "path",
+                        "description": "ID de l'événement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des instances de tickets pour l'événement",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucune instance de ticket trouvée pour cet événement"
+                    }
+                }
+            }
+        },
+        "/api/ticket-by-event-and-payment-status/{evenementId}/{isPaid}": {
+            "get": {
+                "summary": "Récupérer les instances de tickets par événement et statut de paiement",
+                "description": "Récupère les instances de tickets (Ticketinstance) pour un événement donné, filtrées par leur statut de paiement (1 pour Payé, 0 pour Non Payé).",
+                "operationId": "3374007582de6df418f3eb73ee56d1eb",
+                "parameters": [
+                    {
+                        "name": "evenementId",
+                        "in": "path",
+                        "description": "ID de l'événement",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "isPaid",
+                        "in": "path",
+                        "description": "Statut de paiement : 1 pour Payé, 0 pour Non Payé",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "enum": [
+                                0,
+                                1
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Liste des instances de tickets correspondant aux critères",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Statut de paiement invalide (doit être 0 ou 1)"
+                    },
+                    "404": {
+                        "description": "Aucune instance de ticket trouvée pour cet événement et ce statut"
+                    }
+                }
+            }
+        },
         "/api/roles": {
             "get": {
                 "summary": "Récupérer toutes les rôles",
@@ -1667,6 +1756,145 @@
                 }
             }
         },
+        "/api/tickets/assign": {
+            "post": {
+                "tags": [
+                    "Attribution des Tickets"
+                ],
+                "summary": "Attribue un ensemble de tickets à un utilisateur.",
+                "description": "Cette méthode lit l'ID de l'utilisateur et une liste d'IDs de tickets pour créer des entrées dans la table 'ticketagent'.",
+                "operationId": "9a5558abb414be5a4b9a48d1b347e8c3",
+                "requestBody": {
+                    "description": "Données d'attribution (user_id et ticketinstance_ids)",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "ticketinstance_ids"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID de l'utilisateur à qui attribuer les tickets.",
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "ticketinstance_ids": {
+                                        "description": "Liste des IDs des tickets à attribuer.",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "integer",
+                                            "example": 101
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tickets attribués avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tickets attribués avec succès à l'utilisateur."
+                                        },
+                                        "user_id": {
+                                            "type": "integer",
+                                            "example": 5
+                                        },
+                                        "assigned_tickets": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "integer",
+                                                "example": 101
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Utilisateur non trouvé."
+                    },
+                    "422": {
+                        "description": "Erreur de validation des données (champs manquants ou invalides)."
+                    }
+                }
+            }
+        },
+        "/api/users/assigned-tickets": {
+            "get": {
+                "tags": [
+                    "Attribution des Tickets"
+                ],
+                "summary": "Lister tous les utilisateurs et leurs tickets attribués.",
+                "description": "Récupère une liste de tous les utilisateurs qui ont au moins un ticket attribué, avec les détails de ces tickets.",
+                "operationId": "161b356bdeba8ce4ddf7c6788e0b8d15",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs et de leurs tickets.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun utilisateur n'a de ticket attribué."
+                    }
+                }
+            }
+        },
+        "/api/me/assigned-tickets": {
+            "get": {
+                "tags": [
+                    "Attribution des Tickets"
+                ],
+                "summary": "Récupérer les tickets attribués à l'utilisateur connecté.",
+                "description": "Récupère la liste des Ticketinstance attribuées à l'utilisateur qui fait l'appel (authentifié).",
+                "operationId": "b7f221967f29bbbd0276007dd3596853",
+                "responses": {
+                    "200": {
+                        "description": "Liste des tickets attribués à l'utilisateur.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non authentifié."
+                    },
+                    "404": {
+                        "description": "Aucun ticket attribué à cet utilisateur."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users": {
             "get": {
                 "summary": "Récupérer toutes les utilisateurs",
@@ -1842,5 +2070,10 @@
             }
         }
     },
-    "tags": []
+    "tags": [
+        {
+            "name": "Attribution des Tickets",
+            "description": "Attribution des Tickets"
+        }
+    ]
 }
