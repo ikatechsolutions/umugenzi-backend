@@ -49,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me/assigned-tickets', [TicketagentController::class, 'getMyAssignedTickets']);
 });
 
+Route::post('/tickets/assign', [TicketagentController::class, 'assign']);
 Route::get('/users/assigned-tickets', [TicketagentController::class, 'getAllUsersWithAssignedTickets']);
 
 Route::apiResource('categories',CategoryController::class);
