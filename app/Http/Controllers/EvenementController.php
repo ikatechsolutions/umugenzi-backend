@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Historiqueevent;
 
 class EvenementController extends Controller
 {
@@ -220,8 +222,8 @@ class EvenementController extends Controller
         try {
             $evenement = Evenement::findOrFail($id);
             
-            if ($evenement->status == 1) {
-                 return response()->json([
+            if ($evenement->statut_validation == 1) { 
+                return response()->json([
                     'status' => 'info',
                     'message' => 'L\'événement est déjà validé.'
                 ], 200);
@@ -230,6 +232,15 @@ class EvenementController extends Controller
             // Mise à jour du statut
             $evenement->statut_validation = 1;
             $evenement->save();
+
+            // Récupérer l'ID de l'utilisateur connecté
+            $userId = Auth::id(); // ou auth()->id()
+
+            // Insérer l'enregistrement dans la table Historiqueevent
+            Historiqueevent::create([
+                'evenement_id' => $evenement->id,
+                'user_id' => $userId, // L'utilisateur qui a validé
+            ]);
 
             return response()->json([
                 'status' => 'success',

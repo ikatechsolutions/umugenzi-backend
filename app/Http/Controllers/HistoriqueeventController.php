@@ -25,40 +25,22 @@ class HistoriqueeventController extends Controller
         return response()->json($historiques);
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/historiques/valider/{evenement}",
-     *     summary="Valider la participation de l'utilisateur actuel à un événement",
-     *     @OA\Parameter(
-     *      name="Evenement à valide",
-     *      in="path",
-     *      required=true,
-     *      description="ID de l'événement à valide",
-     *      @OA\Schema(
-     *          type="integer"
-     *      )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Succès de la validation de l'événement"
-     *     )
-     * )
-     */
-    public function store($evenement)
-    {
-        $event = Evenement::findOrFail($evenement);
+    
+    // public function store($evenement)
+    // {
+    //     $event = Evenement::findOrFail($evenement);
 
-        $historique = new Historiqueevent();
-        $historique->evenement_id = $event->id;
-        $historique->user_id = auth()->id();
+    //     $historique = new Historiqueevent();
+    //     $historique->evenement_id = $event->id;
+    //     $historique->user_id = auth()->id();
 
-        $historique->save();
+    //     $historique->save();
 
-        return response()->json([
-            'message' => "L'événement est validé avec success",
-        ],201);
+    //     return response()->json([
+    //         'message' => "L'événement est validé avec success",
+    //     ],201);
 
-    }
+    // }
 
     /**
      * Display the specified resource.

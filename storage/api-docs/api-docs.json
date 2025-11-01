@@ -1157,28 +1157,6 @@
                 }
             }
         },
-        "/api/historiques/valider/{evenement}": {
-            "post": {
-                "summary": "Valider la participation de l'utilisateur actuel à un événement",
-                "operationId": "3cf72fe796a3da1be29802d24022c032",
-                "parameters": [
-                    {
-                        "name": "Evenement à valide",
-                        "in": "path",
-                        "description": "ID de l'événement à valide",
-                        "required": true,
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Succès de la validation de l'événement"
-                    }
-                }
-            }
-        },
         "/api/permissions": {
             "get": {
                 "summary": "Récupérer toutes les permissions",
@@ -1893,6 +1871,121 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/ticketdistributions": {
+            "post": {
+                "summary": "Crée une nouvelle distribution de ticket et gère le stock.",
+                "description": "Valide les données, verrouille le stock pour éviter les problèmes de concurrence, vérifie la disponibilité, crée la distribution et met à jour le stock. Utilise une transaction de base de données.",
+                "operationId": "3ddd5ffe325186ffc1089eec158e4788",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "user_id",
+                                    "ticket_id",
+                                    "quantite_attribue"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "description": "ID de l'utilisateur (doit exister dans la table 'users').",
+                                        "type": "integer"
+                                    },
+                                    "ticket_id": {
+                                        "description": "ID du ticket à distribue (doit exister dans la table 'tickets').",
+                                        "type": "integer"
+                                    },
+                                    "quantite_attribue": {
+                                        "description": "Quantité de tickets à distribue.",
+                                        "type": "integer",
+                                        "format": "int32",
+                                        "minimum": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Distribution créée avec succès.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Distribution créée avec succès."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Quantité de tickets non disponible (stock insuffisant).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Quantité de tickets non disponible (stock restant: 2)."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Erreur de validation des données fournies.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The given data was invalid."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Erreur interne du serveur lors du traitement de la transaction.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Erreur lors du traitement de la distribution."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/api/users": {

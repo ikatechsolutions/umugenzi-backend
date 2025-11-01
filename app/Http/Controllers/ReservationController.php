@@ -330,7 +330,7 @@ class ReservationController extends Controller
      */
     public function allTicket()
     {
-        $ticketInstance = Ticketinstance::with('reservation.ticket.typeticket.evenement')->get();
+        $ticketInstance = Ticketinstance::with('reservation.ticket.typeticket.evenement', 'ticketdistribution.ticket.typeticket.evenement')->get();
         
 
         return response()->json($ticketInstance);
@@ -368,7 +368,7 @@ class ReservationController extends Controller
         // On utilise 'whereHas' pour filtrer les Ticketinstance
         // où la relation imbriquée 'reservation.ticket.typeticket.evenement' a l'ID correspondant.
         $ticketInstances = Ticketinstance::with([
-            'reservation.ticket.typeticket.evenement'
+            'reservation.ticket.typeticket.evenement', 'ticketdistribution.ticket.typeticket.evenement'
         ])
         ->whereHas('reservation.ticket.typeticket.evenement', function ($query) use ($evenementId) {
             $query->where('id', $evenementId);
@@ -433,10 +433,10 @@ class ReservationController extends Controller
 
         // 2. Requête combinée
         $ticketInstances = Ticketinstance::with([
-            'reservation.ticket.typeticket.evenement'
+            'reservation.ticket.typeticket.evenement', 'ticketdistribution.ticket.typeticket.evenement'
         ])
         // Filtre 1: Par ID d'événement (utilise whereHas pour naviguer dans les relations)
-        ->whereHas('reservation.ticket.typeticket.evenement', function ($query) use ($evenementId) {
+        ->whereHas('reservation.ticket.typeticket.evenement', 'ticketdistribution.ticket.typeticket.evenement', function ($query) use ($evenementId) {
             $query->where('id', $evenementId);
         })
         // Filtre 2: Par statut de paiement (filtre direct sur la colonne de la table ticketinstances)

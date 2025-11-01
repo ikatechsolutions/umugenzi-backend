@@ -17,6 +17,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\GiftController;
 use App\Http\Controllers\HistoriqueeventController;
 use App\Http\Controllers\TicketagentController;
+use App\Http\Controllers\TicketdistributionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,6 +65,8 @@ Route::post('/validate-ticket/{evenementId}', [ReservationController::class, 'va
 Route::get('/ticket-all', [ReservationController::class, 'allTicket']);
 Route::get('/ticket-by-event/{evenementId}', [ReservationController::class, 'getTicketsByEventId']);
 Route::get('/ticket-by-event-and-payment-status/{evenementId}/{isPaid}', [ReservationController::class, 'getTicketsByEventAndPaymentStatus']);
+
+Route::apiResource('ticketdistributions',TicketdistributionController::class);
 
 Route::apiResource('groupes',GroupeController::class);
 Route::get('/groupe/{groupeId}/tirage', [GroupeController::class, 'effectuerTirageAuSort']);
