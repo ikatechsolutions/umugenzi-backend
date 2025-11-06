@@ -6,7 +6,7 @@ use App\Models\Groupe;
 use App\Models\Game;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Twilio\Rest\Client;
+// use Twilio\Rest\Client;
 
 class GroupeController extends Controller
 {
@@ -361,32 +361,32 @@ class GroupeController extends Controller
         }
         
         // Initialisation et envoi des notifications WhatsApp
-        $sid = getenv("TWILIO_SID");
-        $token = getenv("TWILIO_TOKEN");
-        $sender = "whatsapp:" . getenv("TWILIO_PHONE"); 
-        $twilio = new Client($sid, $token);
+        // $sid = getenv("TWILIO_SID");
+        // $token = getenv("TWILIO_TOKEN");
+        // $sender = "whatsapp:" . getenv("TWILIO_PHONE"); 
+        // $twilio = new Client($sid, $token);
 
         foreach ($tirages as $joueur => $cible) {
             $phoneNumber = $candidats[$joueur]['phone'];
             $cibleGiftName = $candidats[$cible]['gift_name'];
 
             // Créer le message
-            $messageContent = "🎉 Félicitations, " . $joueur . " ! 🎉\n";
-            $messageContent .= "Vous avez tiré au sort le nom de : " . $cible . ".\n";
-            $messageContent .= "Le cadeau choisi par " . $cible . " est : " . $cibleGiftName . ".\n";
-            $messageContent .= "Bonne chance dans le jeu !";
+            // $messageContent = "🎉 Félicitations, " . $joueur . " ! 🎉\n";
+            // $messageContent .= "Vous avez tiré au sort le nom de : " . $cible . ".\n";
+            // $messageContent .= "Le cadeau choisi par " . $cible . " est : " . $cibleGiftName . ".\n";
+            // $messageContent .= "Bonne chance dans le jeu !";
             
-            try {
-                $twilio->messages
-                       ->create("whatsapp:" . $phoneNumber,
-                           [
-                               "body" => $messageContent,
-                               "from" => $sender
-                           ]
-                       );
-            } catch (\Exception $e) {
-                \Log::error("Erreur lors de l'envoi du message à " . $phoneNumber . ": " . $e->getMessage());
-            }
+            // try {
+            //     $twilio->messages
+            //            ->create("whatsapp:" . $phoneNumber,
+            //                [
+            //                    "body" => $messageContent,
+            //                    "from" => $sender
+            //                ]
+            //            );
+            // } catch (\Exception $e) {
+            //     \Log::error("Erreur lors de l'envoi du message à " . $phoneNumber . ": " . $e->getMessage());
+            // }
         }
 
         return response()->json([
