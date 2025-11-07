@@ -96,7 +96,7 @@ class GroupeController extends Controller
         }
 
         // Compte le nombre de jeux pour chaque groupe
-        $groupes = $groupes->where('user_id', auth()->id())->withCount('games')->latest()
+        $groupes = $groupes->withCount('games')->latest()
         ->whereDate('created_at', now())
         ->paginate(10);
 
@@ -105,7 +105,7 @@ class GroupeController extends Controller
 
     public function countGameDay()
     {
-        $groupes_crees_aujourdhui = Groupe::whereDate('created_at', now())->where('user_id', auth()->id())->count();
+        $groupes_crees_aujourdhui = Groupe::whereDate('created_at', now())->count();
 
         return response()->json([
             'total' => $groupes_crees_aujourdhui
