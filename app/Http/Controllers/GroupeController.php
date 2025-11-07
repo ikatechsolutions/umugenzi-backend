@@ -87,25 +87,32 @@ class GroupeController extends Controller
      */
     public function gameAgent()
     {
-        $query = request('q');
+        $userId = auth()->id();
+        $groupes = Groupe::where('user_id', $userId);
 
-        $groupes = Groupe::query();
+        // Récupération de la requête 'q'
+        $query = $request->input('q'); // Utilisation de l'objet Request injecté
 
         if ($query) {
             $groupes->where('name', 'like', "%{$query}%");
         }
 
-        // Compte le nombre de jeux pour chaque groupe
-        $groupes = $groupes->withCount('games')->latest()
-        ->whereDate('created_at', now())
-        ->paginate(10);
+        // Terminer la requête: filtrer par date, compter les jeux, trier et paginer
+        $groupes = $groupes
+            ->withCount('games')
+            ->whereDate('created_at', now()) // Maintenant filtre uniquement les groupes de l'utilisateur pour aujourd'hui
+            ->latest()
+            ->paginate(10);
 
         return response()->json($groupes);
     }
 
     public function countGameDay()
     {
-        $groupes_crees_aujourdhui = Groupe::whereDate('created_at', now())->count();
+        $userId = auth()->id();
+
+        $groupes_crees_aujourdhui = Groupe::where('user_id', $userId)
+                                      ->whereDate('created_at', now())->count();
 
         return response()->json([
             'total' => $groupes_crees_aujourdhui
