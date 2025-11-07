@@ -96,7 +96,7 @@ class GroupeController extends Controller
         }
 
         // Compte le nombre de jeux pour chaque groupe
-        $groupes = $groupes->withCount('games')->where('user_id', auth()->id())->latest()
+        $groupes = $groupes->where('user_id', auth()->id())->withCount('games')->latest()
         ->whereDate('created_at', now())
         ->paginate(10);
 
