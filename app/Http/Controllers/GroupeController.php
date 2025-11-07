@@ -105,7 +105,7 @@ class GroupeController extends Controller
 
     public function countGameDay()
     {
-        $groupes_crees_aujourdhui = Groupe::whereDate('created_at', now())->count();
+        $groupes_crees_aujourdhui = Groupe::whereDate('created_at', now())->where('user_id', auth()->id())->count();
 
         return response()->json([
             'total' => $groupes_crees_aujourdhui

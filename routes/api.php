@@ -48,6 +48,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/evenement-manager', [EvenementController::class, 'eventManager']);
     Route::post('historiques/valider/{evenement}', [HistoriqueeventController::class, 'store']);
     Route::get('/me/assigned-tickets', [TicketagentController::class, 'getMyAssignedTickets']);
+
+    Route::get('/count-game', [GroupeController::class, 'countGameDay']);
+    Route::get('/groupe-agent', [GroupeController::class, 'gameAgent']);
 });
 
 Route::post('/tickets/assign', [TicketagentController::class, 'assign']);
@@ -75,8 +78,7 @@ Route::get('/groupes/{groupe}/games', [GameController::class, 'gameByGroup']);
 
 Route::get('/evenements/category/{id}', [EvenementController::class, 'filterEvent']);
 
-Route::get('/count-game', [GroupeController::class, 'countGameDay']);
-Route::get('/groupe-agent', [GroupeController::class, 'gameAgent']);
+
 
 //Historiques des événements
 Route::get('historiques', [HistoriqueeventController::class, 'index']);
