@@ -185,7 +185,7 @@ class ReservationController extends Controller
 
             // 1. Verrouiller la ligne et la trouver (avec les relations nécessaires)
             $ticket = Ticketinstance::where('code_unique', $codeUnique)
-                ->with('reservation.ticket.typeticket')
+                ->with('reservation.ticket.typeticket.evenement')
                 ->lockForUpdate()
                 ->first();
 
@@ -195,7 +195,8 @@ class ReservationController extends Controller
             }
             
             // 2. VERIFICATION CRITIQUE : Le ticket appartient-il à cet événement ?
-            $ticketEvenementId = optional($ticket->reservation->ticket->typeticket)->evenement_id;
+            $evenement = $ticket->reservation->ticket->typeticket->evenement;
+            $ticketEvenementId = $evenement->id;
             
             if ($ticketEvenementId !== $evenementId) {
                 DB::rollBack();
@@ -220,35 +221,42 @@ class ReservationController extends Controller
             // B. Cas : Le ticket est PRÊT pour la validation (Scan n°2)
             if ($ticket->statut_payment == 1) {
                 // Le paiement est déjà vérifié, procéder à la validation d'entrée
-                
+                $eventDate = Carbon::parse($evenement->date_event)->startOfDay();
+                $now = Carbon::now();
+                if ($now->lt($eventDate)) {
+                    DB::rollBack();
+                    return response()->json([
+                        'message' => "ATTENTION : L'événement n'a pas encore commencé.",
+                        'detail' => "Date de l'événement: " . $eventDate->format('d/m/Y'),
+                        'statut' => 'TOO_EARLY', // Statut pour Flutter
+                    ], 428); // 428 Precondition Required - Code HTTP approprié
+                }
+
+                // Si la date est arrivée, on valide
                 $ticket->statut_validation = 1;
-                // Optionnel : enregistrer la date de validation
-                // $ticket->validated_at = Carbon::now(); 
                 $ticket->save();
                 
                 DB::commit();
 
                 return response()->json([
                     'message' => '✅ VALIDATION D\'ENTRÉE RÉUSSIE.',
-                    'statut' => 'VALIDATED', // Indique la validation finale
-                    'type' => $ticket->reservation->ticket->typeticket->nom
+                    'statut' => 'VALIDATED',
+                    'type' => $ticket->reservation->ticket->typeticket->nom,
                 ], 200);
 
             } 
             
             // C. Cas : Le ticket n'est PAS payé (Scan n°1)
             else { 
-                // Le statut_payment est à 0, on le met à 1 (Vérification du paiement)
-                
-                $ticket->statut_payment = 1;
-                $ticket->save();
 
-                DB::commit();
+                DB::rollBack(); // On doit faire un rollback car on n'a rien mis à jour
 
                 return response()->json([
-                    'message' => '✅ PAIEMENT VÉRIFIÉ. Scanner une deuxième fois pour l\'entrée.',
-                    'statut' => 'PAYMENT_VERIFIED', // Indique que le paiement est OK, mais pas encore entré
+                    'message' => 'CONFIRMATION REQUISE. Vérification du paiement.',
+                    'statut' => 'PAYMENT_PENDING', // Statut pour Flutter
                     'code_unique' => $ticket->code_unique,
+                    'type' => $ticket->reservation->ticket->typeticket->nom,
+                    'prix' => $ticket->reservation->ticket->typeticket->prix, 
                 ], 202); // 202 Accepted (Accepté, mais traitement incomplet)
             }
 
@@ -257,6 +265,40 @@ class ReservationController extends Controller
             // Loggez l'erreur pour le débogage en production
             // \Log::error("Erreur de validation: " . $e->getMessage()); 
             return response()->json(['message' => 'Erreur critique lors de la validation.'], 500);
+        }
+    }
+
+    public function confirmPayment(Request $request)
+    {
+        $request->validate(['code' => 'required|string']);
+        $codeUnique = $request->input('code');
+
+        try {
+            DB::beginTransaction();
+            
+            $ticket = Ticketinstance::where('code_unique', $codeUnique)
+                ->lockForUpdate()
+                ->first();
+
+            if (!$ticket) {
+                DB::rollBack();
+                return response()->json(['message' => 'Ticket non trouvé.'], 404);
+            }
+
+            if ($ticket->statut_payment == 1) {
+                 DB::rollBack();
+                 return response()->json(['message' => 'Paiement déjà vérifié.'], 409);
+            }
+            
+            $ticket->statut_payment = 1;
+            $ticket->save();
+            
+            DB::commit();
+            return response()->json(['message' => 'Paiement vérifié avec succès. Scanner à nouveau pour l\'entrée.'], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['message' => 'Erreur critique lors de la confirmation.'], 500);
         }
     }
 

@@ -62,6 +62,8 @@ Route::apiResource('tickets',TicketController::class);
 Route::apiResource('reservations',ReservationController::class);
 
 Route::post('/validate-ticket/{evenementId}', [ReservationController::class, 'validateTicket']);
+Route::post('/confirm-payment', [ReservationController::class, 'confirmPayment'])
+    ->name('api.payment.confirm');
 Route::get('/ticket-all', [ReservationController::class, 'allTicket']);
 Route::get('/ticket-by-event/{evenementId}', [ReservationController::class, 'getTicketsByEventId']);
 Route::get('/ticket-by-event-and-payment-status/{evenementId}/{isPaid}', [ReservationController::class, 'getTicketsByEventAndPaymentStatus']);
