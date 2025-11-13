@@ -1875,33 +1875,42 @@
         },
         "/api/ticketdistributions": {
             "post": {
-                "summary": "Crée une nouvelle distribution de ticket et gère le stock.",
-                "description": "Valide les données, verrouille le stock pour éviter les problèmes de concurrence, vérifie la disponibilité, crée la distribution et met à jour le stock. Utilise une transaction de base de données.",
+                "summary": "Crée plusieurs distributions de tickets pour un utilisateur et gère le stock de manière atomique.",
+                "description": "Valide les données, effectue toutes les distributions dans une seule transaction DB, en verrouillant le stock de chaque type de ticket pour éviter les problèmes de concurrence.",
                 "operationId": "3ddd5ffe325186ffc1089eec158e4788",
                 "requestBody": {
+                    "description": "Liste des tickets à distribuer à l'utilisateur.",
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
                                     "user_id",
-                                    "ticket_id",
-                                    "quantite_attribue"
+                                    "distributions"
                                 ],
                                 "properties": {
                                     "user_id": {
                                         "description": "ID de l'utilisateur (doit exister dans la table 'users').",
                                         "type": "integer"
                                     },
-                                    "ticket_id": {
-                                        "description": "ID du ticket à distribue (doit exister dans la table 'tickets').",
-                                        "type": "integer"
-                                    },
-                                    "quantite_attribue": {
-                                        "description": "Quantité de tickets à distribue.",
-                                        "type": "integer",
-                                        "format": "int32",
-                                        "minimum": 1
+                                    "distributions": {
+                                        "description": "Liste des distributions de tickets.",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "ticket_id": {
+                                                    "description": "ID du ticket/type de stock à distribuer.",
+                                                    "type": "integer"
+                                                },
+                                                "quantite_attribue": {
+                                                    "description": "Quantité de ce type de ticket à attribuer.",
+                                                    "type": "integer",
+                                                    "format": "int32",
+                                                    "minimum": 1
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -1911,7 +1920,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Distribution créée avec succès.",
+                        "description": "Toutes les distributions ont été créées avec succès.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1922,7 +1931,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Distribution créée avec succès."
+                                            "example": "Toutes les distributions ont été traitées avec succès."
                                         }
                                     },
                                     "type": "object"
@@ -1931,14 +1940,14 @@
                         }
                     },
                     "400": {
-                        "description": "Quantité de tickets non disponible (stock insuffisant).",
+                        "description": "Stock insuffisant pour au moins un des types de tickets.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "properties": {
                                         "error": {
                                             "type": "string",
-                                            "example": "Quantité de tickets non disponible (stock restant: 2)."
+                                            "example": "Stock insuffisant pour le ticket ID 5 (restant: 2)."
                                         }
                                     },
                                     "type": "object"
@@ -1977,7 +1986,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Erreur lors du traitement de la distribution."
+                                            "example": "Erreur lors du traitement de la distribution en masse."
                                         }
                                     },
                                     "type": "object"

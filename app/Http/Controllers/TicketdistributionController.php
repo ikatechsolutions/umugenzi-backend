@@ -24,32 +24,37 @@ class TicketdistributionController extends Controller
     /**
      * @OA\Post(
      * path="/api/ticketdistributions",
-     * summary="Crée une nouvelle distribution de ticket et gère le stock.",
-     * description="Valide les données, verrouille le stock pour éviter les problèmes de concurrence, vérifie la disponibilité, crée la distribution et met à jour le stock. Utilise une transaction de base de données.",
+     * summary="Crée plusieurs distributions de tickets pour un utilisateur et gère le stock de manière atomique.",
+     * description="Valide les données, effectue toutes les distributions dans une seule transaction DB, en verrouillant le stock de chaque type de ticket pour éviter les problèmes de concurrence.",
      *
      * @OA\RequestBody(
      * required=true,
+     * description="Liste des tickets à distribuer à l'utilisateur.",
      * @OA\JsonContent(
-     * required={"user_id", "ticket_id", "quantite_attribue"},
      * @OA\Property(property="user_id", type="integer", description="ID de l'utilisateur (doit exister dans la table 'users')."),
-     * @OA\Property(property="ticket_id", type="integer", description="ID du ticket à distribue (doit exister dans la table 'tickets')."),
-     * @OA\Property(property="quantite_attribue", type="integer", format="int32", minimum=1, description="Quantité de tickets à distribue."),
+     * @OA\Property(property="distributions", type="array", description="Liste des distributions de tickets.",
+     * @OA\Items(
+     * @OA\Property(property="ticket_id", type="integer", description="ID du ticket/type de stock à distribuer."),
+     * @OA\Property(property="quantite_attribue", type="integer", format="int32", minimum=1, description="Quantité de ce type de ticket à attribuer."),
+     * )
+     * ),
+     * required={"user_id", "distributions"},
      * )
      * ),
      *
      * @OA\Response(
      * response=201,
-     * description="Distribution créée avec succès.",
+     * description="Toutes les distributions ont été créées avec succès.",
      * @OA\JsonContent(
      * @OA\Property(property="status", type="string", example="success"),
-     * @OA\Property(property="message", type="string", example="Distribution créée avec succès.")
+     * @OA\Property(property="message", type="string", example="Toutes les distributions ont été traitées avec succès.")
      * )
      * ),
      * @OA\Response(
      * response=400,
-     * description="Quantité de tickets non disponible (stock insuffisant).",
+     * description="Stock insuffisant pour au moins un des types de tickets.",
      * @OA\JsonContent(
-     * @OA\Property(property="error", type="string", example="Quantité de tickets non disponible (stock restant: 2).")
+     * @OA\Property(property="error", type="string", example="Stock insuffisant pour le ticket ID 5 (restant: 2).")
      * )
      * ),
      * @OA\Response(
@@ -65,7 +70,7 @@ class TicketdistributionController extends Controller
      * description="Erreur interne du serveur lors du traitement de la transaction.",
      * @OA\JsonContent(
      * @OA\Property(property="status", type="string", example="error"),
-     * @OA\Property(property="message", type="string", example="Erreur lors du traitement de la distribution.")
+     * @OA\Property(property="message", type="string", example="Erreur lors du traitement de la distribution en masse.")
      * )
      * )
      * )
@@ -73,76 +78,104 @@ class TicketdistributionController extends Controller
     public function store(Request $request)
     {
         // 1. Validation de base des données
-        $data = $request->validate([
+        $request->validate([
             'user_id' => 'required|exists:users,id',
-            'ticket_id' => 'required|exists:tickets,id',
-            'quantite_attribue' => 'required|integer|min:1',
-            // Validation conditionnelle pour l'invité
+            // Valide que 'distributions' est un tableau et chaque élément respecte les règles
+            'distributions' => 'required|array|min:1',
+            'distributions.*.ticket_id' => 'required|exists:tickets,id|integer',
+            'distributions.*.quantite_attribue' => 'required|integer|min:1',
+            // Options d'invité (si conservées)
             'name' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
-            // user_id est requis seulement si non authentifié (pour l'API)
-            // Note: Si vous utilisez l'ID de l'utilisateur connecté, ce champ n'est pas nécessaire dans le formulaire.
         ]);
 
-        $quantity = $data['quantite_attribue'];
-        $ticketStockId = $data['ticket_id'];
+        $userId = $request->user_id;
+        $distributions = $request->distributions;
 
         try {
             DB::beginTransaction();
-
-            // 2. Verrouillage du stock et vérification de la disponibilité
-            // Utilisation de lockForUpdate() pour éviter les problèmes de concurrence (double-réservation)
-            $stock = Ticket::where('id', $ticketStockId)
-                ->lockForUpdate() 
-                ->firstOrFail();
-
-            if ($stock->quantite_initiales < $quantity) {
-                DB::rollBack(); // Annuler si le stock est insuffisant
-                return response()->json(['error' => 'Quantité de tickets non disponible (stock restant: ' . $stock->quantite_initiales . ').'], 400);
-            }
             
-            // 3. Détermination du prix et calcul du montant
-            // Chargement de la relation typeticket pour obtenir le prix
-            $stock->load('typeticket'); 
-            $prixUnitaire = $stock->typeticket->prix;
-            $montantTotal = $quantity * $prixUnitaire;
+            // On s'assure d'avoir la liste des IDs de tickets
+            $ticketIds = collect($distributions)->pluck('ticket_id')->unique()->all();
 
-            // 4. Création de la ligne de Reservation
-            $ticketdistribution = Ticketdistribution::create([
-                // Mappage avec votre schéma initial
-                'ticket_id' => $ticketStockId,
-                'user_id' => $request->user_id,
-                'quantite_attribue' => $request->quantite_attribue, 
-                'quantite_vendue' => 0,
-                'quantite_restante' => $request->quantite_attribue,
-            ]);
+            // 2. Verrouillage du stock pour TOUS les tickets concernés en UNE SEULE requête
+            // Cela réduit le risque de blocage (deadlock) par rapport à des verrous multiples dans une boucle
+            $stocks = Ticket::whereIn('id', $ticketIds)
+                ->lockForUpdate() // Verrouillage du stock pour la durée de la transaction
+                ->get()
+                ->keyBy('id'); // Facilite la recherche par ID
 
-            // 5. Mise à jour de la quantité de stock
-            $stock->quantite_sorties += $quantity;
-            $stock->quantite_initiales -= $quantity;
-            $stock->save();
+            // 3. Boucle sur chaque distribution
+            foreach ($distributions as $distribution) {
+                $ticketId = $distribution['ticket_id'];
+                $quantity = $distribution['quantite_attribue'];
 
-            // 6. Création des instances de Ticket avec génération automatique des codes (Insertion en masse)
-            Ticketinstance::createDistributionTicketInstances($ticketdistribution, $quantity);
+                // Vérification et préparation des objets
+                if (!isset($stocks[$ticketId])) {
+                     // Devrait être géré par 'exists:tickets,id', mais vérification de sécurité
+                     DB::rollBack();
+                     return response()->json(['error' => "Ticket ID {$ticketId} introuvable."], 404);
+                }
 
-            // 7. Si tout a réussi, valider la transaction
+                $stock = $stocks[$ticketId];
+
+                // 3a. Vérification de la disponibilité du stock
+                if ($stock->quantite_initiales < $quantity) {
+                    DB::rollBack(); // Annuler si le stock est insuffisant
+                    return response()->json([
+                        'error' => "Stock insuffisant pour le ticket ID {$ticketId} (restant: {$stock->quantite_initiales})."
+                    ], 400);
+                }
+                
+                // 3b. Détermination du prix et calcul du montant (Optionnel: si vous utilisez le prix)
+                // $stock->load('typeticket'); // Non nécessaire si vous faites le calcul ailleurs ou n'en avez pas besoin ici
+                // $prixUnitaire = $stock->typeticket->prix;
+                // $montantTotal = $quantity * $prixUnitaire;
+
+                // 3c. Création de la ligne de Distribution
+                $ticketdistribution = Ticketdistribution::create([
+                    'ticket_id' => $ticketId,
+                    'user_id' => $userId,
+                    'quantite_attribue' => $quantity, 
+                    'quantite_vendue' => 0,
+                    'quantite_restante' => $quantity,
+                ]);
+
+                // 3d. Mise à jour de la quantité de stock (sur l'objet verrouillé)
+                $stock->quantite_sorties += $quantity;
+                $stock->quantite_initiales -= $quantity;
+                // La sauvegarde finale sera faite après la boucle pour chaque stock modifié.
+                
+                // 3e. Création des instances de Ticket
+                Ticketinstance::createDistributionTicketInstances($ticketdistribution, $quantity);
+            }
+
+            // 4. Sauvegarder toutes les mises à jour de stock APRES la boucle de validation
+            // Ceci est critique pour s'assurer que si une seule distribution échoue (étape 3a), rien n'est écrit.
+            foreach ($stocks as $stock) {
+                // On ne sauvegarde que si l'objet a été réellement modifié dans la boucle
+                if ($stock->isDirty()) { 
+                    $stock->save();
+                }
+            }
+
+            // 5. Si tout a réussi, valider la transaction
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Distribution créée avec succès.',
+                'message' => 'Toutes les distributions ont été traitées avec succès.',
             ], 201);
 
         } catch (\Exception $e) {
-            DB::rollBack(); // Annuler en cas d'erreur
-            // Loggez l'erreur pour le débogage
-            \Log::error("Erreur de distribution: " . $e->getMessage()); 
+            DB::rollBack(); // Annuler toutes les opérations en cas d'erreur
+            \Log::error("Erreur de distribution en masse: " . $e->getMessage()); 
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Erreur lors du traitement de la distribution.',
-                'details' => $e->getMessage() // À ne pas afficher en production
+                'message' => 'Erreur lors du traitement de la distribution en masse.',
+                // 'details' => $e->getMessage() // À ne pas afficher en production
             ], 500);
         }
     }
