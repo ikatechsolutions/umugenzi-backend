@@ -11,13 +11,29 @@ use App\Models\Ticketinstance;
 class TicketdistributionController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * @OA\Get(
+     * path="/api/ticketdistributions",
+     * summary="Lister tous les utilisateurs et leurs tickets attribués.",
+     * description="Récupère une liste de tous les utilisateurs qui ont au moins un ticket attribué, avec les détails de ces tickets.",
+     * @OA\Response(
+     * response=200,
+     * description="Liste des utilisateurs et de leurs tickets.",
+     * @OA\JsonContent(
+     * type="array",
+     * @OA\Items(type="string")
+     * )
+     * ),
+     * @OA\Response(
+     * response=404,
+     * description="Aucun utilisateur n'a de ticket attribué."
+     * )
+     * )
      */
     public function index()
     {
-        $ticketdistributions = Ticketdistribution::with('user', 'ticket');
+        $ticketdistributions = Ticketdistribution::with('user', 'ticket')->get();
 
-        return response()->jsnon($ticketdistributions);
+        return response()->json($ticketdistributions);
     }
 
 

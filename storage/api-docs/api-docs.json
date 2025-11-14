@@ -1874,6 +1874,29 @@
             }
         },
         "/api/ticketdistributions": {
+            "get": {
+                "summary": "Lister tous les utilisateurs et leurs tickets attribués.",
+                "description": "Récupère une liste de tous les utilisateurs qui ont au moins un ticket attribué, avec les détails de ces tickets.",
+                "operationId": "1565962e4a67385b14cd090879eafb80",
+                "responses": {
+                    "200": {
+                        "description": "Liste des utilisateurs et de leurs tickets.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Aucun utilisateur n'a de ticket attribué."
+                    }
+                }
+            },
             "post": {
                 "summary": "Crée plusieurs distributions de tickets pour un utilisateur et gère le stock de manière atomique.",
                 "description": "Valide les données, effectue toutes les distributions dans une seule transaction DB, en verrouillant le stock de chaque type de ticket pour éviter les problèmes de concurrence.",
