@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Http\Request;
 use PDF;
+use Carbon\Carbon;
 
 class ReservationController extends Controller
 {
@@ -258,7 +259,7 @@ class ReservationController extends Controller
                     'type' => $ticket->reservation->ticket->typeticket->nom,
                     'prix' => $ticket->reservation->ticket->typeticket->prix, 
                 ], 202); // 202 Accepted (Accepté, mais traitement incomplet)
-            }
+            } 
 
         } catch (\Exception $e) {
             DB::rollBack();
