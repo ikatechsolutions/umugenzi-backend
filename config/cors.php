@@ -20,9 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://umugenzi.bi',
-        'https://www.umugenzi.bi',
-        'http://localhost:5173'
+        '*'
     ],
 
     'allowed_origins_patterns' => [],
